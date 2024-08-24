@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { initSwagger } from './app.swagger';
 import { urlencoded, json } from 'express';
-import { NODE_ENV, PORT } from './config/config.env';
+import { NODE_ENV, PORT, PORT_SOCKET } from './config/config.env';
 import { ConfigService } from '@nestjs/config';
 
 import * as express from 'express';
@@ -50,7 +50,6 @@ async function bootstrap() {
   );
   const config = app.get(ConfigService);
   const port = config.get(PORT);
-
   const nodeEnv = config.get(NODE_ENV);
   initSwagger(app);
   await app.listen(port);
@@ -60,5 +59,6 @@ async function bootstrap() {
   logger.log(`Running in ${nodeEnv} mode`);
   logger.log(`App running in ${await app.getUrl()}/api`);
   logger.log(await `Swagger running in http://localhost:${port}/docs`);
+  logger.log(`WebSocket server running on ws://localhost:${3000}`);
 } 
 bootstrap();
