@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PlcDataModule } from './plc-data/plc-data.module';
 import { HistoricoPlcModule } from './historico-plc/historico-plc.module';
 import { IpEquipoModule } from './ip-equipo/ip-equipo.module';
+import { ListaEquiposModule } from './lista-equipos/lista-equipos.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -23,6 +24,7 @@ import { IpEquipoModule } from './ip-equipo/ip-equipo.module';
     PlcDataModule,
     HistoricoPlcModule,
     IpEquipoModule,
+    ListaEquiposModule,
   ],
   controllers: [AppController],
   providers: [AppService],
