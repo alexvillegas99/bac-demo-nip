@@ -13,7 +13,7 @@ import { PlcDataService } from '../plc-data/plc-data.service';
 import { HistoricoPlcService } from 'src/historico-plc/historico-plc.service';
 import { ConfigService } from '@nestjs/config';
 
-@WebSocketGateway(3000, {
+@WebSocketGateway( {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -62,14 +62,25 @@ export class SocketsGateway
   }
   @SubscribeMessage('findHistoricoPlcData')
   async handleFindHistoricoPlcData(
-    @MessageBody() data: { ip: string; limit?: number },
+    @MessageBody() data: { ips: string[]; limit?: number },
     @ConnectedSocket() client: Socket,
   ) {
     console.log('Client:', client.id);
+    console.log('Client:', client.id);
+
     try {
-      const result = await this.historicoPlcService.find(data);
-      console.log('Sending historical PLC data to client:', result);
-      client.emit('findHistoricoPlcDataResponse', result);
+      // Buscar histórico de todas las IPs
+      const results = await Promise.all(
+        data.ips.map(ip => this.historicoPlcService.find({ ip, limit: data.limit }))
+      );
+  
+      // Enviar los datos agrupados por IP
+      const response = data.ips.map((ip, index) => ({
+        ip,   
+        data: results[index],
+      }));
+  
+      client.emit('findHistoricoPlcDataResponse', response);
     } catch (error) {
       console.error('Error in WebSocket handler:', error);
       client.emit('findHistoricoPlcDataResponse', {

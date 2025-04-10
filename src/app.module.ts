@@ -9,6 +9,9 @@ import { PlcDataModule } from './plc-data/plc-data.module';
 import { HistoricoPlcModule } from './historico-plc/historico-plc.module';
 import { IpEquipoModule } from './ip-equipo/ip-equipo.module';
 import { ListaEquiposModule } from './lista-equipos/lista-equipos.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { AuthModule } from './auth/auth.module';
+import { HorómetroModule } from './horómetro/horómetro.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -25,6 +28,10 @@ import { ListaEquiposModule } from './lista-equipos/lista-equipos.module';
     HistoricoPlcModule,
     IpEquipoModule,
     ListaEquiposModule,
+    UsuariosModule,
+    AuthModule,
+    UsuariosModule,
+    HorómetroModule
   ],
   controllers: [AppController],
   providers: [AppService],

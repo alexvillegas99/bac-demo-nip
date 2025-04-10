@@ -59,6 +59,6 @@ async function bootstrap() {
   logger.log(`Running in ${nodeEnv} mode`);
   logger.log(`App running in ${await app.getUrl()}/api`);
   logger.log(await `Swagger running in http://localhost:${port}/docs`);
-  logger.log(`WebSocket server running on ws://localhost:${3000}`);
+  logger.log(`WebSocket server running on ws://localhost:${4000}`);
 } 
 bootstrap();
