@@ -67,7 +67,7 @@ export class SocketsGateway
   ) {
     console.log('Client:', client.id);
     console.log('Client:', client.id);
-
+ 
     try {
       // Buscar histórico de todas las IPs
       const results = await Promise.all(
