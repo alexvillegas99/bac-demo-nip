@@ -10,5 +10,4 @@ export class ListaEquiposController {
   async find() {
     return await this.listaEquiposService.find();
   }
-
 }
