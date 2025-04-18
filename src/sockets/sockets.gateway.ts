@@ -45,14 +45,14 @@ export class SocketsGateway
 
   @SubscribeMessage('findPlcData')
   async handleFindPlcData(
-    @MessageBody() data: { ip: string },
+    @MessageBody() data: { ip: string; tipo?: string },
     @ConnectedSocket() client: Socket,
   ) {
     console.log('Client:', client.id);
     try {
       const result = await this.plcDataService.find(data);
       console.log('Sending data to client:');
-      client.emit('findPlcDataResponse', result); // Usa emit para enviar datos al cliente
+      client.emit('findPlcDataResponse', result);
     } catch (error) {
       console.error('Error in WebSocket handler:', error);
       client.emit('findPlcDataResponse', {
@@ -60,26 +60,44 @@ export class SocketsGateway
       });
     }
   }
-  @SubscribeMessage('findHistoricoPlcData')
-  async handleFindHistoricoPlcData(
-    @MessageBody() data: { ips: string[]; limit?: number },
+  
+
+  @SubscribeMessage('findPlcDataAll')
+  async handleFindPlcDataAll(
     @ConnectedSocket() client: Socket,
   ) {
     console.log('Client:', client.id);
-    console.log('Client:', client.id);
- 
     try {
-      // Buscar histórico de todas las IPs
+      const result = await this.plcDataService.findAll();
+      console.log('Sending data to client:');
+      client.emit('findPlcDataAllResponse', result); // Us  a emit para enviar datos al cliente
+    } catch (error) {
+      console.error('Error in WebSocket handler:', error);
+      client.emit('findPlcDataAllResponse', {
+        error: 'An error occurred while fetching data.',
+      });
+    }
+  }
+
+
+
+  @SubscribeMessage('findHistoricoPlcData')
+  async handleFindHistoricoPlcData(
+    @MessageBody() data: { ips: string[]; rango: string; tipo?: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('Client:', client.id);
+    try {
       const results = await Promise.all(
-        data.ips.map(ip => this.historicoPlcService.find({ ip, limit: data.limit }))
-      );
-  
-      // Enviar los datos agrupados por IP
+        data.ips.map(ip =>
+          this.historicoPlcService.find({ ip, rango: data.rango, tipo: data.tipo })
+        )
+      ); 
+
       const response = data.ips.map((ip, index) => ({
-        ip,   
+        ip,
         data: results[index],
       }));
-  
       client.emit('findHistoricoPlcDataResponse', response);
     } catch (error) {
       console.error('Error in WebSocket handler:', error);

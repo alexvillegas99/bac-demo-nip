@@ -15,10 +15,24 @@ export class PlcDataService {
   ) {
   }
 
-  async find(body: any) {
+  async find(body: { ip: string; tipo?: string }) {
     try {
-      const data = await this.plcDataBase.find({ IP: body.ip }).exec();
-      return data[0];
+      console.log('find', body);
+      const query: any = { IP: body.ip };
+      if (body.tipo) query.tipo = body.tipo;
+  
+      const data = await this.plcDataBase.find(query).exec();
+      return data[0]; // solo el primero si hay varios
+    } catch (error) {
+      return null;
+    }
+  }
+  
+
+  async findAll() {
+    try {
+      const data = await this.plcDataBase.find().exec();
+      return data;
     } catch (error) {
       return null;
     }
