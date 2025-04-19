@@ -23,9 +23,9 @@ export class UsuariosService {
       rol: data.rol ?? '  Visualizador', // usa rol si viene, si no, 'visualizador'
       claveTemporal,
     });
-  
+
     await usuario.save();
-  
+
     // TODO: Enviar clave por correo
     return {
       mensaje: 'Usuario creado con clave temporal.',
@@ -38,27 +38,27 @@ export class UsuariosService {
     const usuario = await this.usuarioModel.findByIdAndUpdate(id, data, {
       new: true,
     });
-  
+
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
-  
+
     return {
       mensaje: 'Usuario actualizado',
       usuario,
     };
   }
-  
+
   async cambiarEstadoUsuario(id: string, estado: boolean) {
     const usuario = await this.usuarioModel.findById(id);
-  
+
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
-  
+
     usuario.estado = estado;
     await usuario.save();
-  
+
     return {
       mensaje: `Usuario ${estado ? 'habilitado' : 'deshabilitado'}`,
       usuario,
@@ -66,15 +66,15 @@ export class UsuariosService {
   }
   async listarUsuarios(rol?: string, estado?: string) {
     const filtro: any = {};
-  
+
     if (rol) {
       filtro.rol = rol;
     }
-  
+
     if (estado !== undefined) {
       filtro.estado = estado === 'true'; // convierte string a boolean
     }
-  
+
     const usuarios = await this.usuarioModel.find(filtro);
     return {
       mensaje: 'Lista de usuarios',
@@ -82,19 +82,17 @@ export class UsuariosService {
       data: usuarios,
     };
   }
-  
+
   async obtenerUsuarioPorId(id: string) {
     const usuario = await this.usuarioModel.findById(id);
-  
+
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
-  
+
     return {
       mensaje: 'Usuario encontrado',
       usuario,
     };
   }
-  
-
 }

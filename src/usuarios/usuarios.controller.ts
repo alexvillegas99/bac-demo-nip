@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Query,
-  Put,
-  Param,
-  Get,
-} from '@nestjs/common';
+import { Controller, Post, Body, Query, Put, Param, Get } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 
 @Controller('usuarios')
@@ -18,7 +10,6 @@ export class UsuariosController {
   async crearUsuario(@Body() body: any) {
     return this.usuariosService.crearUsuario(body);
   }
-
 
   // 👉 Editar usuario por ID
   @Put(':id')

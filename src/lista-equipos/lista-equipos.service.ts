@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { listaEquipos } from './entities/lista-equipos.entity';
 import { ErrorHandlerService } from 'src/common/services/error-handler.service';
+import { ErrorManager } from 'src/common/error.manager';
 
 @Injectable()
 export class ListaEquiposService {
@@ -11,12 +12,39 @@ export class ListaEquiposService {
     private readonly listaEquipos: Model<listaEquipos>,
     private readonly _errorHandlerService: ErrorHandlerService,
   ) {}
+
   async find() {
     try {
       const data = await this.listaEquipos.find().exec();
       return data;
     } catch (error) {
       this._errorHandlerService.handleCustomError(error.response);
+    }
+  }
+
+  async create(payload: any) {
+    try {
+      const respuesta = new this.listaEquipos(payload);
+      return await respuesta.save();
+    } catch (err) {
+      throw ErrorManager.createSignatureError(err.message);
+    }
+  }
+
+  async updateById(id: string, payload: any) {
+    try {
+      const actualizacion = await this.listaEquipos
+        .findByIdAndUpdate(id, payload, { new: true })
+        .exec();
+      if (!actualizacion) {
+        throw new ErrorManager({
+          type: 'BAD_REQUEST',
+          message: `No se actualizó el registro con id ${id}`,
+        });
+      }
+      return actualizacion;
+    } catch (err) {
+      throw ErrorManager.createSignatureError(err.message);
     }
   }
 }
