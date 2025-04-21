@@ -100,3 +100,4 @@ Instalar y configurar nginx.
 Configurar el dominio en nginx.
 Instalar y configurar Certbot para SSL.
 Con estos pasos, deberías tener un servidor configurado con las herramientas necesarias y un dominio seguro con SSL configurado usando Certbot.
+

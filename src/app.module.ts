@@ -13,6 +13,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { AuthModule } from './auth/auth.module';
 import { HorómetroModule } from './horómetro/horómetro.module';
 import { TareasModule } from './tareas/tareas.module';
+import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -34,6 +35,7 @@ import { TareasModule } from './tareas/tareas.module';
     UsuariosModule,
     HorómetroModule,
     TareasModule,
+    AmazonS3Module
   ],
   controllers: [AppController],
   providers: [AppService],
