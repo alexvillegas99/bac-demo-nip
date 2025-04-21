@@ -12,6 +12,7 @@ import { ListaEquiposModule } from './lista-equipos/lista-equipos.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { AuthModule } from './auth/auth.module';
 import { HorómetroModule } from './horómetro/horómetro.module';
+import { TareasModule } from './tareas/tareas.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -31,10 +32,10 @@ import { HorómetroModule } from './horómetro/horómetro.module';
     UsuariosModule,
     AuthModule,
     UsuariosModule,
-    HorómetroModule
+    HorómetroModule,
+    TareasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
- 
 })
 export class AppModule {}
