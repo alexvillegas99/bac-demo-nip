@@ -28,4 +28,21 @@ export class HistoricoPlcController {
     return await this.historicoPlcService.find(body);
   }
 
+
+  @Post('energia-promedio')
+  @ApiBody({
+    description: 'Obtener energía consumida, costo y puntos promedio por IP',
+    schema: {
+      example: {
+        ips: ['172.16.107.5', '172.16.107.6'],
+        desde: '2025-04-30',
+        hasta: '2025-04-30'
+      }
+    }
+  })
+  async obtenerEnergiaPromedio(@Body() body: { ips: string[], desde: string, hasta: string }) {
+    const desdeUtc = new Date(`${body.desde}T00:00:00-05:00`).toISOString();
+    const hastaUtc = new Date(`${body.hasta}T23:59:59-05:00`).toISOString();
+    return await this.historicoPlcService.obtenerPromedioEnergiaPorIps(body.ips, desdeUtc, hastaUtc);
+  }
 }
