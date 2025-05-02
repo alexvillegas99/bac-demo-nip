@@ -1,38 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { OrometroDocument, OrometroModelName } from './schema/orometro.schema';
 import { Model } from 'mongoose';
+import { HorometroDocument, HorometroModelName } from './schema/orometro.schema';
 export class OrometroService {
-  constructor(@InjectModel(OrometroModelName) private model: Model<OrometroDocument>) {}
+  constructor(@InjectModel(HorometroModelName)
+  private readonly model: Model<HorometroDocument>) {}
 
-  async create(data: any): Promise<any> {
-    return this.model.create(data);
-  }
+  
 
-  async findAll(): Promise<any[]> {
-    return this.model.find().exec();
-  }
- 
-  async findByIp(ip: string): Promise<any> {
-    return this.model.findOne({ ip }).exec();
-  }
-
-  async updateTiempo(ip: string, segundos: number): Promise<any> {
-    return this.model.findOneAndUpdate(
-      { ip },
-      {
-        $inc: { tiempoTotalSegundos: segundos },
-        ultimaActualizacion: new Date(),
-      },
-      { new: true, upsert: true }
-    );
-  }
-  async update(ip: string, updateData: any): Promise<any> {
-    return this.model.findOneAndUpdate(
-      { ip },
-      { $set: updateData, updatedAt: new Date() },
-      { new: true, upsert: true }
-    );
+  async findPorIpsYFechas(ips: string[], fechaInicio: Date, fechaFin: Date): Promise<any> {
+    const registros = await this.model.find({
+      ip: { $in: ips },
+      fecha: {
+        $gte: fechaInicio,
+        $lte: fechaFin
+      }
+    }).exec();
+  
+    // Agrupar por IP
+    const agrupado = registros.reduce((acc: any, doc) => {
+      if (!acc[doc.ip]) acc[doc.ip] = [];
+      acc[doc.ip].push(doc);
+      return acc;
+    }, {});
+  
+    return agrupado;
   }
   
 }

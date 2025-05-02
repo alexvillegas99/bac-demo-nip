@@ -11,7 +11,7 @@ import { IpEquipoModule } from './ip-equipo/ip-equipo.module';
 import { ListaEquiposModule } from './lista-equipos/lista-equipos.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { AuthModule } from './auth/auth.module';
-import { HorómetroModule } from './horómetro/horómetro.module';
+import { HorometroModule } from './horómetro/horómetro.module';
 import { TareasModule } from './tareas/tareas.module';
 import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
 @Module({
@@ -33,7 +33,7 @@ import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
     UsuariosModule,
     AuthModule,
     UsuariosModule,
-    HorómetroModule,
+    HorometroModule,
     TareasModule,
     AmazonS3Module
   ],

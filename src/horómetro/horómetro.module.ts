@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Horometro, HorometroSchema } from './schema/orometro.schema';
 import { OrometroController } from './horómetro.controller';
 import { OrometroService } from './horómetro.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Orometro, OrometroSchema } from './schema/orometro.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Orometro.name, schema: OrometroSchema },
+      { name: Horometro.name, schema: HorometroSchema },
     ]),
   ],
   controllers: [OrometroController],
   providers: [OrometroService],
+  exports: [MongooseModule], // opcional si otros módulos necesitan el modelo
 })
-export class HorómetroModule {}
+export class HorometroModule {}
+ 

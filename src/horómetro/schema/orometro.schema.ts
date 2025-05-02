@@ -1,27 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema({ timestamps: true })
-export class Orometro {
-  @Prop({ required: true, unique: true })
-  ip: string; // IP del equipo
+@Schema({ collection: 'horometros', timestamps: true }) // 👈 nombre personalizado
+export class Horometro {
+  @Prop({ required: true })
+  ip: string;
 
-  @Prop({ default: 0 })
-  tiempoTotalSegundos: number;
+  @Prop({ required: true })
+  tipo: string;
 
-  @Prop({ default: false })
-  ultimaLecturaEstado: boolean;
+  @Prop({ required: true })
+  fecha: Date;
 
-  @Prop()
-  proximoMantenimiento: Date; // Próxima fecha de mantenimiento
+  @Prop({ required: true })
+  minutosEncendido: number;
 
-  @Prop()
-  tareaProgramada: string; // Descripción del mantenimiento (ej: "Cambio de aceite")
-
-  createdAt: Date;
-  updatedAt: Date;
+  @Prop({ required: true })
+  nombre: string;
 }
 
-export type OrometroDocument = Orometro & Document;
-export const OrometroSchema = SchemaFactory.createForClass(Orometro);
-export const OrometroModelName = 'Orometro';
+export type HorometroDocument = Horometro & Document;
+export const HorometroSchema = SchemaFactory.createForClass(Horometro);
+export const HorometroModelName = 'Horometro';
