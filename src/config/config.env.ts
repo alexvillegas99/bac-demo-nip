@@ -11,6 +11,15 @@ export default () => ({
     bucketName: process.env.AWS_S3_BUCKET_NAME || '',
     bucketRegion: process.env.AWS_S3_BUCKET_REGION || '',
   },
+  mail: {
+    host: process.env.MAIL_HOST,
+    port: parseInt(process.env.MAIL_PORT, 10) || 587,
+    secure: process.env.MAIL_SECURE === 'true',
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+  },
 });
 export const PORT = 'port';
 export const NODE_ENV = 'node_env';
@@ -24,3 +33,10 @@ export const AMAZON_S3_ACCESS_KEY_ID = 'amazon3s.accessKeyId';
 export const AWS_SECRET_ACCESS_KEY = 'amazon3s.secretAccessKey';
 export const AWS_S3_BUCKET_NAME = 'amazon3s.bucketName';
 export const AWS_S3_BUCKET_REGION = 'amazon3s.bucketRegion';
+
+
+export const MAIL_HOST = 'mail.host';
+export const MAIL_PORT = 'mail.port';
+export const MAIL_SECURE = 'mail.secure';
+export const MAIL_USER = 'mail.auth.user';
+export const MAIL_PASS = 'mail.auth.pass';

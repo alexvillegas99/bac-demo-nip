@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import { Usuario } from './entities/usuario.entity';
 import { UsuarioDocument } from './schema/usuario.schema';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsuariosService {
@@ -14,6 +15,7 @@ export class UsuariosService {
   constructor(
     @InjectModel(Usuario.name)
     private usuarioModel: Model<UsuarioDocument>,
+    private readonly mailService: MailService
   ) {}
 
   async crearUsuario(data: any) {
@@ -25,6 +27,16 @@ export class UsuariosService {
     });
 
     await usuario.save();
+    const html = this.mailService.getTemplate('bienvenida.html', {
+      nombre: data.nombre,
+    });
+    await this.mailService.enviar(data.correo, 'Bienvenida', html);
+
+    const html2 = this.mailService.getTemplate('credenciales.html', {
+      nombre: data.nombre,
+      clave: claveTemporal,
+    });
+    await this.mailService.enviar(data.correo, 'Credenciales de acceso', html2);
 
     // TODO: Enviar clave por correo
     return {

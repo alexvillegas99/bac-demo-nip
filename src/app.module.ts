@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { HorometroModule } from './horómetro/horómetro.module';
 import { TareasModule } from './tareas/tareas.module';
 import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
+import { MailModule } from './mail/mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -35,7 +36,8 @@ import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
     UsuariosModule,
     HorometroModule,
     TareasModule,
-    AmazonS3Module
+    AmazonS3Module,
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService],

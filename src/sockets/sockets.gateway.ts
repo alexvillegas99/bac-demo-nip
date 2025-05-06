@@ -13,7 +13,7 @@ import { PlcDataService } from '../plc-data/plc-data.service';
 import { HistoricoPlcService } from 'src/historico-plc/historico-plc.service';
 import { ConfigService } from '@nestjs/config';
 
-@WebSocketGateway( {
+@WebSocketGateway({
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -28,7 +28,7 @@ export class SocketsGateway
   constructor(
     private readonly plcDataService: PlcDataService,
     private readonly historicoPlcService: HistoricoPlcService,
-    private readonly configService:ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   afterInit(server: Server) {
@@ -60,12 +60,9 @@ export class SocketsGateway
       });
     }
   }
-  
 
   @SubscribeMessage('findPlcDataAll')
-  async handleFindPlcDataAll(
-    @ConnectedSocket() client: Socket,
-  ) {
+  async handleFindPlcDataAll(@ConnectedSocket() client: Socket) {
     console.log('Client:', client.id);
     try {
       const result = await this.plcDataService.findAll();
@@ -79,31 +76,44 @@ export class SocketsGateway
     }
   }
 
-
-
   @SubscribeMessage('findHistoricoPlcData')
-  async handleFindHistoricoPlcData(
-    @MessageBody() data: { ips: string[]; rango: string; tipo?: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    console.log('Client:', client.id);
-    try {
-      const results = await Promise.all(
-        data.ips.map(ip =>
-          this.historicoPlcService.find({ ip, rango: data.rango, tipo: data.tipo })
-        )
-      ); 
+async handleFindHistoricoPlcData(
+  @MessageBody()
+  data: {
+    ips: string[];
+    rango?: string;
+    desde?: string;
+    hasta?: string;
+    tipo?: string;
+  },
+  @ConnectedSocket() client: Socket,
+) {
+  console.log('Client:', client.id);
 
-      const response = data.ips.map((ip, index) => ({
-        ip,
-        data: results[index],
-      }));
-      client.emit('findHistoricoPlcDataResponse', response);
-    } catch (error) {
-      console.error('Error in WebSocket handler:', error);
-      client.emit('findHistoricoPlcDataResponse', {
-        error: 'An error occurred while fetching historical PLC data.',
-      });
-    }
+  try {
+    const results = await Promise.all(
+      data.ips.map((ip) =>
+        this.historicoPlcService.find({
+          ip,
+          tipo: data.tipo,
+          desde: data.desde,
+          hasta: data.hasta,
+        }),
+      ),
+    );
+
+    const response = data.ips.map((ip, index) => ({
+      ip,
+      data: results[index],
+    }));
+
+    client.emit('findHistoricoPlcDataResponse', response);
+  } catch (error) {
+    console.error('Error in WebSocket handler:', error);
+    client.emit('findHistoricoPlcDataResponse', {
+      error: 'An error occurred while fetching historical PLC data.',
+    });
   }
+}
+
 }

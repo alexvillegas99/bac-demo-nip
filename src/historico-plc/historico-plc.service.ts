@@ -4,19 +4,22 @@ import { UpdateHistoricoPlcDto } from './dto/update-historico-plc.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { HistoricoPlc } from './entities/historico-plc.entity';
-
+import * as dayjs from 'dayjs';
 @Injectable()
 export class HistoricoPlcService {
   constructor(
     @InjectModel('historico-plc')
     private readonly plcDataBase: Model<HistoricoPlc>,
   ) {}
-  async find(body: any) {
+  /*  async find(body: any) {
     try {
       const { ip, tipo, rango } = body;
+      console.log('IP:', ip);
+      console.log('Tipo:', tipo);
+      console.log('Rango:', rango);
       const agrupado = true; // Agrupar por defecto
       const query: any = {};
-      if (ip) query.IP = ip;
+      if (ip) query.IP = ip; 
       if (tipo) query.tipo = tipo;
 
       const ahora = new Date();
@@ -44,13 +47,94 @@ export class HistoricoPlcService {
       }
 
       const data = await this.plcDataBase.find(query).sort({ _id: -1 }).exec();
-
+      return data;
       if (!agrupado || data.length <= 10) return data;
 
       // Agrupar cada campo (excepto IP y fecha) en 10 grupos promedio
       const agrupados = this.promediarPorGrupos(data, 10);
       return agrupados;
     } catch (error) {
+      return null;
+    }
+  } */
+
+  async find(body: any) {
+    try {
+      const { ip, tipo, desde, hasta } = body;
+      console.log('IP:', ip);
+      console.log('Tipo:', tipo);
+      console.log('Desde:', desde);
+      console.log('Hasta:', hasta);
+
+      const matchStage: any = {
+        fecha: {
+          $gte: new Date(desde),
+          $lte: new Date(hasta),
+        },
+      };
+      if (ip) matchStage.IP = ip;
+      if (tipo) matchStage.tipo = tipo;
+
+      const data = await this.plcDataBase
+        .aggregate([
+          { $match: matchStage },
+          {
+            $group: {
+              _id: {
+                ip: '$IP',
+                tipo: '$tipo',
+                hora: {
+                  $dateTrunc: {
+                    date: '$fecha',
+                    unit: 'hour',
+                  },
+                },
+              },
+              fecha: { $first: '$fecha' },
+
+              // VARIADOR
+              corriente: { $avg: '$corriente' },
+              voltaje: { $avg: '$voltaje' },
+              potencia: { $avg: '$potencia' },
+              frecuencia: { $avg: '$frecuencia' },
+
+              // PM
+              CORRIENTE_TOT: { $avg: '$CORRIENTE_TOT' },
+              VOLTAJE_TOT: { $avg: '$VOLTAJE_TOT' },
+              POT_TOT: { $avg: '$POT_TOT' },
+              FHZ_TOT: { $avg: '$FHZ_TOT' },
+              FPOT_TOT: { $avg: '$FPOT_TOT' },
+
+              CORRIENTE_A: { $avg: '$CORRIENTE_A' },
+              CORRIENTE_B: { $avg: '$CORRIENTE_B' },
+              CORRIENTE_C: { $avg: '$CORRIENTE_C' },
+              VOLTAJE_AB: { $avg: '$VOLTAJE_AB' },
+              VOLTAJE_BC: { $avg: '$VOLTAJE_BC' },
+              VOLTAJE_CA: { $avg: '$VOLTAJE_CA' },
+
+              TH_DBA: { $avg: '$TH_DBA' },
+              TH_DBC: { $avg: '$TH_DBC' },
+              TH_DCA: { $avg: '$TH_DCA' },
+              THD_COR_A: { $avg: '$THD_COR_A' },
+              THD_COR_B: { $avg: '$THD_COR_B' },
+              THD_COR_C: { $avg: '$THD_COR_C' },
+
+              POT_A: { $avg: '$POT_A' },
+              POT_B: { $avg: '$POT_B' },
+              POT_C: { $avg: '$POT_C' },
+
+              FPOT_A: { $avg: '$FPOT_A' },
+              FPOT_B: { $avg: '$FPOT_B' },
+              FPOT_C: { $avg: '$FPOT_C' },
+            },
+          },
+          { $sort: { _id: -1 } },
+        ])
+        .exec();
+
+      return data;
+    } catch (error) {
+      console.error('❌ Error en find (agregado):', error);
       return null;
     }
   }
@@ -95,69 +179,79 @@ export class HistoricoPlcService {
     const desdeFecha = new Date(desde);
     const hastaFecha = new Date(hasta);
     const resultados = [];
-    console.log('Desde:', desdeFecha, 'Hasta:', hastaFecha);
+
     for (const ip of ips) {
-      const registros: any[] = await this.plcDataBase
-        .find({
-          IP: ip,
-          tipo: 'pm',
-          fecha: { $gte: desdeFecha, $lte: hastaFecha },
-          ENERG: { $exists: true }, // ✅ Solo registros que tienen ENERG
-        })
-        .sort({ fecha: 1 })
-        .select({ ENERG: 1, fecha: 1, _id: 0 })
-        .lean(); 
+      const dias = await this.plcDataBase
+        .aggregate([
+          {
+            $match: {
+              IP: ip,
+              tipo: 'pm',
+              fecha: { $gte: desdeFecha, $lte: hastaFecha },
+              ENERG: { $exists: true, $type: 'number' },
+            },
+          },
+          {
+            $project: {
+              ENERG: 1,
+              fecha: 1,
+            },
+          },
+          {
+            $addFields: {
+              dia: { $dateToString: { format: '%Y-%m-%d', date: '$fecha' } },
+            },
+          },
+          { $sort: { fecha: 1 } },
+          {
+            $group: {
+              _id: '$dia',
+              energiaInicial: { $first: '$ENERG' },
+              energiaFinal: { $last: '$ENERG' },
+              registros: { $push: { ENERG: '$ENERG', fecha: '$fecha' } },
+            },
+          },
+          {
+            $addFields: {
+              consumo: {
+                $round: [
+                  { $subtract: ['$energiaFinal', '$energiaInicial'] },
+                  2,
+                ],
+              },
+            },
+          },
+          {
+            $match: { consumo: { $gt: 0 } },
+          },
+          {
+            $project: {
+              fecha: '$_id',
+              consumo: 1,
+              registros: 1,
+              _id: 0,
+            },
+          },
+          {
+            $sort: { fecha: 1 },
+          },
+        ])
+        .allowDiskUse(true)
+        .exec();
 
-      console.log('Registros:', registros);
-      if (registros.length < 2) {
-        resultados.push({ ip, consumo: 0, costo: 0, puntos: [] });
-        continue;
+      // Calcular el costo por día en Node.js
+      for (const dia of dias) {
+        dia.costo = parseFloat(
+          this.calcularCostoConTarifas(dia.registros).toFixed(2),
+        );
+        delete dia.registros; // remover si no necesitas devolver
       }
-      const registrosFiltrados = registros.filter(
-        (r) => typeof r.ENERG === 'number',
-      );
 
-      if (registrosFiltrados.length < 2) {
-        resultados.push({ ip, consumo: 0, costo: 0, puntos: [] });
-        continue;
-      }
-      console.log('Registros filtrados:', registrosFiltrados[0]);
-      console.log(
-        'Registros filtrados:',
-        registrosFiltrados[registrosFiltrados.length - 1],
-      );
-      const energiaInicial = registrosFiltrados[0].ENERG;
-      const energiaFinal =
-        registrosFiltrados[registrosFiltrados.length - 1].ENERG;
-      console.log('Primero:', energiaInicial);
-      console.log('Último:', energiaFinal);
-
-      const consumoTotal = energiaFinal - energiaInicial;
-      const costoTotal = this.calcularCostoConTarifas(registrosFiltrados);
-      const puntos = this.agregarCostoPorGrupo(registrosFiltrados);
-
-      resultados.push({
-        ip,
-        consumo: parseFloat(consumoTotal.toFixed(2)),
-        costo: parseFloat(costoTotal.toFixed(2)),
-        puntos,
-      });
+      resultados.push({ ip, dias });
     }
 
     return resultados;
   }
- 
-  
-  
-  private agregarCostoPorGrupo(data: any[]) {
-    return data.map((punto, i) => {
-      if (i === 0) return { ...punto, costo: 0 }; // primer punto no tiene costo
-      const grupo = [data[i - 1], data[i]];
-    
-      return { ...punto};
-    });
-  }
-  
 
   private calcularCostoConTarifas(data: any[]): number {
     let total = 0;
@@ -165,10 +259,9 @@ export class HistoricoPlcService {
       const energiaConsumida = data[i].ENERG - data[i - 1].ENERG;
       const horaEcuador = new Date(data[i].fecha);
       const hora = horaEcuador.getUTCHours() - 5;
-      const dia = horaEcuador.getUTCDay(); // 0 domingo ... 6 sábado
+      const dia = horaEcuador.getUTCDay();
       const horaLocal = (hora + 24) % 24;
 
-      // Tarifa por franja horaria (bombeo agua)
       const tarifa = this.obtenerTarifaPorHora(dia, horaLocal);
       total += energiaConsumida * tarifa;
     }
@@ -176,17 +269,12 @@ export class HistoricoPlcService {
   }
 
   private obtenerTarifaPorHora(dia: number, hora: number): number {
-    // Lunes a viernes
     if (dia >= 1 && dia <= 5) {
       if (hora >= 8 && hora < 18) return 0.056;
       if (hora >= 18 && hora < 22) return 0.095;
-      return 0.045; // 22h a 08h
+      return 0.045;
     }
-
-    // Sábado y domingo
     if (hora >= 18 && hora < 22) return 0.056;
     return 0.045;
   }
-
-  
 }
