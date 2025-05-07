@@ -14,9 +14,10 @@ export class Registro {
 }
 
 const RegistroSchema = SchemaFactory.createForClass(Registro);
+// RegistroSchema.set('_id', false); // Evita que se genere un nuevo _id por cada elemento del array
 
 @Schema({ collection: 'lista-equipos', strict: false })
-export class listaEquipos extends Document {
+export class listaEquipos {
   @Prop({ required: true })
   ip: string;
 
@@ -60,4 +61,6 @@ export class listaEquipos extends Document {
   data: Registro[];
 }
 
+export type listaEquiposDocument = listaEquipos & Document;
 export const listaEquiposSchema = SchemaFactory.createForClass(listaEquipos);
+export const listaEquiposModelName = 'listaEquipos';
