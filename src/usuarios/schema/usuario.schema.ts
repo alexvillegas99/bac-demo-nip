@@ -1,8 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type RolUsuario = 'administrador' | 'visualizador' | 'operador';
-
 @Schema({ timestamps: true })
 export class Usuario {
   @Prop({ required: true })
@@ -22,10 +20,10 @@ export class Usuario {
 
   @Prop({
     type: String,
-    enum: ['Administrador', 'Visualizador', 'Operador'],
-    default: 'Visualizador',
+    // enum: ['Administrador', 'Visualizador', 'Operador', 'Superadministrador'],
+    default: 'Operador',
   })
-  rol: RolUsuario;
+  rol: string;
 
   @Prop({ default: true })
   estado: boolean;

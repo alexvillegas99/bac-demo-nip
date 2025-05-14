@@ -21,6 +21,8 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 
+    if (!user.estado) throw new UnauthorizedException('Usuario inactivo');
+
     const isPasswordValid = user.claveTemporal === clave ? true : false;
 
     delete user.clave;
