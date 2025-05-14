@@ -6,7 +6,6 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 export class PlcDataController {
   constructor(private readonly plcDataService: PlcDataService) {}
 
-
   @Post()
   @ApiBody({
     type: Object,
@@ -23,6 +22,4 @@ export class PlcDataController {
   async find(@Body() body: any) {
     return await this.plcDataService.find(body);
   }
-
-
 }

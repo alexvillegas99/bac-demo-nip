@@ -5,6 +5,9 @@ import { Document } from 'mongoose';
 export class Permisos {
   @Prop()
   descripcion: string;
+
+  @Prop({ default: true })
+  estado: boolean;
 }
 
 const PermisosSchema = SchemaFactory.createForClass(Permisos);

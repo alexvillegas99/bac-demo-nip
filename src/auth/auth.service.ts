@@ -1,16 +1,6 @@
-import {
-  ForbiddenException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
-
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { JWT_EXPIRES_IN, JWT_SECRET } from 'src/config/config.env';
-import { JwtModule } from '@nestjs/jwt';
+import { PerfilService } from 'src/perfil/perfil.service';
 import { UsuariosService } from 'src/usuarios/usuarios.service';
 
 @Injectable()
@@ -20,20 +10,17 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usuariosService: UsuariosService,
-   // private readonly mailService: MailService,
+    private readonly _perfilService: PerfilService,
+    // private readonly mailService: MailService,
   ) {}
 
   async login({ correo, clave }: { correo: string; clave: string }) {
     console.log('correo', correo);
     console.log('clave', clave);
-    const user:any = await this.usuariosService.findByEmail(correo);
+    const user: any = await this.usuariosService.findByEmail(correo);
 
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
-    //const isPasswordValid = await bcrypt.compare(clave, user.clave);
-    //isPasswordValid =  user.clave ===clave ? true : false;
 
-
-    //console.log('isPasswordValid', isPasswordValid);
     const isPasswordValid = user.claveTemporal === clave ? true : false;
 
     delete user.clave;
@@ -42,18 +29,20 @@ export class AuthService {
     }
     const payload = { sub: user._id };
     const accessToken = this.jwtService.sign(payload);
-     //fecha con formato dd/mm/yyyy hh:mm:ss
-        const fecha = new Date().toLocaleString();
-        console.log(fecha);
-  /*   const html = this.mailService.getTemplate('login.html', {
-      nombre: user.nombre,
-      fecha: fecha,
-    });
+    //fecha con formato dd/mm/yyyy hh:mm:ss
+    const fecha = new Date().toLocaleString();
+    console.log(fecha);
 
-    await this.mailService.enviar(user.correo, 'Inicio de sesión', html); */
+    let permisos: any = await this._perfilService.findByName(user.rol);
+    permisos = permisos[0].permisos;
+    permisos = permisos
+      .filter((permiso) => permiso.estado)
+      .map((permiso) => permiso.descripcion);
+
     return {
       accessToken,
       user: user,
+      permisos,
     };
   }
 

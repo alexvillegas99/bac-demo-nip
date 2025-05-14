@@ -11,5 +11,6 @@ import { ErrorHandlerService } from 'src/common/services/error-handler.service';
   ],
   controllers: [PerfilController],
   providers: [PerfilService, ErrorHandlerService],
+  exports: [PerfilService],
 })
 export class PerfilModule {}

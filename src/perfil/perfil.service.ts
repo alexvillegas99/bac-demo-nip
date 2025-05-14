@@ -22,6 +22,19 @@ export class PerfilService {
     }
   }
 
+  async findByName(name: string) {
+    try {
+      const data = await this.perfil
+        .find({
+          nombre: name,
+        })
+        .exec();
+      return data;
+    } catch (error) {
+      this._errorHandlerService.handleCustomError(error.response);
+    }
+  }
+
   async create(payload: any) {
     try {
       const respuesta = new this.perfil(payload);
