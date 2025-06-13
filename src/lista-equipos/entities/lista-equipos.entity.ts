@@ -14,6 +14,23 @@ export class Registro {
 }
 
 const RegistroSchema = SchemaFactory.createForClass(Registro);
+
+@Schema({ _id: false })
+export class Rango {
+  @Prop({ default: 0 })
+  RangoMinimoModerado: number;
+
+  @Prop({ default: 0 })
+  RangoMinimoAlerta: number;
+
+  @Prop({ default: 0 })
+  RangoMaximoModerado: number;
+
+  @Prop({ default: 0 })
+  RangoMaximoAlerta: number;
+}
+
+const RangoSchema = SchemaFactory.createForClass(Rango);
 // RegistroSchema.set('_id', false); // Evita que se genere un nuevo _id por cada elemento del array
 
 @Schema({ collection: 'lista-equipos', strict: false })
@@ -59,6 +76,9 @@ export class listaEquipos {
 
   @Prop({ type: [RegistroSchema] })
   data: Registro[];
+
+  @Prop({ type: RangoSchema })
+  rango: Rango;
 }
 
 export type listaEquiposDocument = listaEquipos & Document;

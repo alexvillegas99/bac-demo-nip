@@ -15,8 +15,6 @@ export class AuthService {
   ) {}
 
   async login({ correo, clave }: { correo: string; clave: string }) {
-    console.log('correo', correo);
-    console.log('clave', clave);
     const user: any = await this.usuariosService.findByEmail(correo);
 
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
@@ -31,9 +29,6 @@ export class AuthService {
     }
     const payload = { sub: user._id };
     const accessToken = this.jwtService.sign(payload);
-    //fecha con formato dd/mm/yyyy hh:mm:ss
-    const fecha = new Date().toLocaleString();
-    console.log(fecha);
 
     let permisos: any = await this._perfilService.findByName(user.rol);
     permisos = permisos[0].permisos;
