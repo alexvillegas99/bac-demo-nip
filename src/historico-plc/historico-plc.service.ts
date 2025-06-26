@@ -7,6 +7,7 @@ import { HistoricoPlc } from './entities/historico-plc.entity';
 import * as dayjs from 'dayjs';
 @Injectable()
 export class HistoricoPlcService {
+ 
   constructor(
     @InjectModel('historico-plc')
     private readonly plcDataBase: Model<HistoricoPlc>,
@@ -126,6 +127,21 @@ export class HistoricoPlcService {
               FPOT_A: { $avg: '$FPOT_A' },
               FPOT_B: { $avg: '$FPOT_B' },
               FPOT_C: { $avg: '$FPOT_C' },
+// Nuevos armónicos
+  HARM3: { $avg: '$HARM3' },
+  HARM5: { $avg: '$HARM5' },
+  HARM7: { $avg: '$HARM7' },
+  HARM9: { $avg: '$HARM9' },
+  HARM11: { $avg: '$HARM11' },
+  HARM13: { $avg: '$HARM13' },
+  HARM15: { $avg: '$HARM15' },
+  HARM17: { $avg: '$HARM17' },
+  HARM19: { $avg: '$HARM19' },
+  HARM21: { $avg: '$HARM21' },
+  // Totales generales
+  HARM: { $avg: '$HARM' },
+  HARM_MG: { $avg: '$HARM_MG' }
+
             },
           },
           {
@@ -205,87 +221,97 @@ export class HistoricoPlcService {
     return resultado;
   }
 
-  async obtenerPromedioEnergiaPorIps(
-    ips: string[],
-    desde: string,
-    hasta: string,
-  ) {
-    const desdeFecha = new Date(desde);
-    const hastaFecha = new Date(hasta);
-    const resultados = [];
+async obtenerPromedioEnergiaPorIps(
+  ips: string[],
+  desde: string,
+  hasta: string,
+) {
+  const desdeFecha = new Date(desde);
+  const hastaFecha = new Date(hasta);
+  const resultados = [];
 
-    for (const ip of ips) {
-      const dias = await this.plcDataBase
-        .aggregate([
-          {
-            $match: {
-              IP: ip,
-              tipo: 'pm',
-              fecha: { $gte: desdeFecha, $lte: hastaFecha },
-              ENERG: { $exists: true, $type: 'number' },
-            },
+  for (const ip of ips) {
+    const dias = await this.plcDataBase
+      .aggregate([
+        {
+          $match: {
+            IP: ip,
+            tipo: 'pm',
+            fecha: { $gte: desdeFecha, $lte: hastaFecha },
+            ENERG: { $exists: true, $type: 'number' },
           },
-          {
-            $project: {
-              ENERG: 1,
-              fecha: 1,
-            },
+        },
+        {
+          $project: {
+            ENERG: 1,
+            fecha: 1,
           },
-          {
-            $addFields: {
-              dia: { $dateToString: { format: '%Y-%m-%d', date: '$fecha' } },
-            },
-          },
-          { $sort: { fecha: 1 } },
-          {
-            $group: {
-              _id: '$dia',
-              energiaInicial: { $first: '$ENERG' },
-              energiaFinal: { $last: '$ENERG' },
-              registros: { $push: { ENERG: '$ENERG', fecha: '$fecha' } },
-            },
-          },
-          {
-            $addFields: {
-              consumo: {
-                $round: [
-                  { $subtract: ['$energiaFinal', '$energiaInicial'] },
-                  2,
-                ],
+        },
+        {
+          $addFields: {
+            dia: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$fecha',
+                timezone: 'America/Guayaquil', // 🎯 importante si manejas UTC
               },
             },
           },
-          {
-            $match: { consumo: { $gt: 0 } },
+        },
+        { $sort: { fecha: 1 } },
+        {
+          $group: {
+            _id: '$dia',
+            energiaInicial: { $first: '$ENERG' },
+            energiaFinal: { $last: '$ENERG' },
+            registros: { $push: { ENERG: '$ENERG', fecha: '$fecha' } },
           },
-          {
-            $project: {
-              fecha: '$_id',
-              consumo: 1,
-              registros: 1,
-              _id: 0,
+        },
+        {
+          $addFields: {
+            consumo: {
+              $round: [
+                { $subtract: ['$energiaFinal', '$energiaInicial'] },
+                2,
+              ],
             },
           },
-          {
-            $sort: { fecha: 1 },
+        },
+        {
+          $match: { consumo: { $gt: 0 } },
+        },
+        {
+          $project: {
+            fecha: '$_id',
+            consumo: 1,
+            registros: 1,
+            _id: 0,
           },
-        ])
-        .allowDiskUse(true)
-        .exec();
+        },
+        { $sort: { fecha: 1 } },
+      ])
+      .allowDiskUse(true)
+      .exec();
 
-      // Calcular el costo por día en Node.js
-      for (const dia of dias) {
+    for (const dia of dias) {
+      try {
         dia.costo = parseFloat(
           this.calcularCostoConTarifas(dia.registros).toFixed(2),
         );
-        delete dia.registros; // remover si no necesitas devolver
+      } catch (err) {
+        dia.costo = 0;
+        console.warn(`⚠️ Error calculando costo para ${ip} - ${dia.fecha}`, err);
       }
 
-      resultados.push({ ip, dias });
+      delete dia.registros;
     }
 
-    return resultados;
+    resultados.push({ ip, dias });
   }
+
+  return resultados;
+}
+
 
   private calcularCostoConTarifas(data: any[]): number {
     let total = 0;
@@ -311,4 +337,239 @@ export class HistoricoPlcService {
     if (hora >= 18 && hora < 22) return 0.056;
     return 0.045;
   }
+
+
+async obtenerConsumoCostosPorFranjas(
+  ips: string[],
+  desde: string,
+  hasta: string,
+) {
+  const ip = ips[0];
+  const desdeFecha = new Date(desde);
+  const hastaFecha = new Date(hasta);
+
+  const franjas = [
+    { nombre: '00-06', inicio: 0, fin: 6 },
+    { nombre: '06-12', inicio: 6, fin: 12 },
+    { nombre: '12-18', inicio: 12, fin: 18 },
+    { nombre: '18-24', inicio: 18, fin: 24 },
+  ];
+
+  const dias: string[] = [];
+  const cursor = new Date(desde);
+  while (cursor <= hastaFecha) {
+    dias.push(cursor.toISOString().split('T')[0]);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const detalle: {
+    fecha: string;
+    franja: string;
+    consumo: number;
+    costo: number;
+  }[] = [];
+
+  for (const dia of dias) {
+    const baseFecha = new Date(`${dia}T00:00:00-05:00`);
+
+    for (const franja of franjas) {
+      const horaInicio = new Date(baseFecha);
+      horaInicio.setHours(franja.inicio);
+
+      const horaFin = new Date(baseFecha);
+      horaFin.setHours(franja.fin);
+
+      const registroInicio: any = await this.plcDataBase
+        .findOne({
+          IP: ip,
+          tipo: 'pm',
+          fecha: { $gte: horaInicio, $lt: horaFin },
+          ENERG: { $exists: true, $type: 'number' },
+        })
+        .sort({ fecha: 1 })
+        .select({ ENERG: 1, fecha: 1 })
+        .exec();
+
+      const registroFin: any = await this.plcDataBase
+        .findOne({
+          IP: ip,
+          tipo: 'pm',
+          fecha: { $gte: horaInicio, $lt: horaFin },
+          ENERG: { $exists: true, $type: 'number' },
+        })
+        .sort({ fecha: -1 })
+        .select({ ENERG: 1, fecha: 1 })
+        .exec();
+
+      if (
+        registroInicio &&
+        registroFin &&
+        registroFin.ENERG > registroInicio.ENERG
+      ) {
+        const consumo = parseFloat(
+          (registroFin.ENERG - registroInicio.ENERG).toFixed(2),
+        );
+        const diaSemana = horaInicio.getDay();
+        const horaReferencia = franja.inicio + 1;
+        const tarifa = this.obtenerTarifaPorHora(diaSemana, horaReferencia);
+        const costo = parseFloat((consumo * tarifa).toFixed(2));
+
+        detalle.push({
+          fecha: dia,
+          franja: franja.nombre,
+          consumo,
+          costo,
+        });
+      }
+    }
+  }
+
+  const resumen: Record<string, { consumo: number; costo: number }> = {
+    '00-06': { consumo: 0, costo: 0 },
+    '06-12': { consumo: 0, costo: 0 },
+    '12-18': { consumo: 0, costo: 0 },
+    '18-24': { consumo: 0, costo: 0 },
+  };
+
+  for (const item of detalle) {
+    resumen[item.franja].consumo += item.consumo;
+    resumen[item.franja].costo += item.costo;
+  }
+
+  const resumenTotal = Object.entries(resumen).map(([franja, valores]) => ({
+    franja,
+    consumo: parseFloat(valores.consumo.toFixed(2)),
+    costo: parseFloat(valores.costo.toFixed(2)),
+  }));
+
+  return {
+    ip,
+    detalle,
+    resumen: resumenTotal,
+  };
+}
+
+async obtenerConsumoCostosPorFranjasAproximadas(
+  ips: string[],
+  desde: string,
+  hasta: string,
+) {
+  const ip = ips[0]; // solo una IP
+  const desdeFecha = new Date(desde);
+  const hastaFecha = new Date(hasta);
+
+  const franjas = [
+    { nombre: '00-06', inicio: 0, fin: 6 },
+    { nombre: '06-12', inicio: 6, fin: 12 },
+    { nombre: '12-18', inicio: 12, fin: 18 },
+    { nombre: '18-24', inicio: 18, fin: 24 },
+  ];
+
+  const dias: string[] = [];
+  const cursor = new Date(desde);
+  while (cursor <= hastaFecha) {
+    dias.push(cursor.toISOString().split('T')[0]);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const detalle: {
+    fecha: string;
+    franja: string;
+    consumo: number;
+    costo: number;
+  }[] = [];
+
+  for (const dia of dias) {
+    for (const franja of franjas) {
+      const baseFecha = new Date(`${dia}T00:00:00-05:00`);
+      const horaInicio = new Date(baseFecha);
+      horaInicio.setHours(franja.inicio);
+      const horaFin = new Date(baseFecha);
+      horaFin.setHours(franja.fin);
+
+      // Buscar registros más cercanos a inicio y fin
+      const registroInicio:any = await this.plcDataBase
+        .find({
+          IP: ip,
+          tipo: 'pm',
+          fecha: { $gte: new Date(desde), $lte: new Date(hasta) },
+          ENERG: { $exists: true, $type: 'number' },
+        })
+        .sort({ fecha: 1 })
+        .exec();
+
+      const inicioCercano = registroInicio.find(
+        (r) => new Date(r.fecha) >= horaInicio && new Date(r.fecha) <= horaFin,
+      ) || registroInicio.find(
+        (r) => Math.abs(new Date(r.fecha).getTime() - horaInicio.getTime()) < 60 * 60 * 1000,
+      );
+
+      const finCercano = [...registroInicio].reverse().find(
+        (r) => new Date(r.fecha) >= horaInicio && new Date(r.fecha) <= horaFin,
+      ) || [...registroInicio].reverse().find(
+        (r) => Math.abs(new Date(r.fecha).getTime() - horaFin.getTime()) < 60 * 60 * 1000,
+      );
+
+      if (
+        inicioCercano &&
+        finCercano &&
+        finCercano.ENERG > inicioCercano.ENERG
+      ) {
+        const consumo = parseFloat(
+          (finCercano.ENERG - inicioCercano.ENERG).toFixed(2),
+        );
+        const diaSemana = horaInicio.getDay();
+        const horaReferencia = franja.inicio + 1;
+        const tarifa = this.obtenerTarifaPorHora(diaSemana, horaReferencia);
+        const costo = parseFloat((consumo * tarifa).toFixed(2));
+
+        detalle.push({
+          fecha: dia,
+          franja: franja.nombre,
+          consumo,
+          costo,
+        });
+      }
+    }
+  }
+
+  // Agrupar por franja
+  const resumen: Record<string, { consumo: number; costo: number }> = {
+    '00-06': { consumo: 0, costo: 0 },
+    '06-12': { consumo: 0, costo: 0 },
+    '12-18': { consumo: 0, costo: 0 },
+    '18-24': { consumo: 0, costo: 0 },
+  };
+
+  for (const item of detalle) {
+    resumen[item.franja].consumo += item.consumo;
+    resumen[item.franja].costo += item.costo;
+  }
+
+  const resumenTotal = Object.entries(resumen).map(([franja, valores]) => ({
+    franja,
+    consumo: parseFloat(valores.consumo.toFixed(2)),
+    costo: parseFloat(valores.costo.toFixed(2)),
+  }));
+
+  return {
+    ip,
+    detalle,
+    resumen: resumenTotal,
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
