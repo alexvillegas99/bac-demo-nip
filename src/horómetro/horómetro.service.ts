@@ -18,7 +18,7 @@ export class OrometroService {
   ) {}
 
   async findPorIpsYFechas(ips: string[]): Promise<any> {
-    console.log('ips', ips);
+    //console.log('ips', ips);
     const registros = await this.model
       .find({
         ip: { $in: ips },
@@ -26,9 +26,9 @@ export class OrometroService {
       .lean()
       .exec();
 
-      console.log('registros', registros);
-    
-      //agrupar por ip todo el historial
+    //console.log('registros', registros);
+
+    //agrupar por ip todo el historial
 
     // Agrupar por IP
     const agrupado = registros.reduce((acc: any, doc) => {
@@ -36,7 +36,7 @@ export class OrometroService {
       acc[doc.ip].push(doc);
       return acc;
     }, {});
-    console.log('agrupado', agrupado);    
+    //console.log('agrupado', agrupado);
     return agrupado;
   }
 
@@ -59,25 +59,27 @@ export class OrometroService {
   async crearRegistroHistorico(ip: any): Promise<any> {
     const registros = await this.model.find({ ip: ip }).exec();
 
-    const totalMinutos = registros.reduce(  
-        
-        (acc: number, doc) => acc + doc.minutosEncendido,
-        0,
-      );
-    console.log('Total minutos:', totalMinutos);
-     const nuevoRegistro = new this.modelHistorial({
+    const totalMinutos = registros.reduce(
+      (acc: number, doc) => acc + doc.minutosEncendido,
+      0,
+    );
+    //console.log('Total minutos:', totalMinutos);
+    const nuevoRegistro = new this.modelHistorial({
       ip: ip,
-      tipo:'variador',
+      tipo: 'variador',
       fecha: new Date(),
-      minutosEncendido: totalMinutos
-     });
+      minutosEncendido: totalMinutos,
+    });
     const dataNew = nuevoRegistro.save();
-   
-     //clonar el ultimoo registro de horometro
 
-    const ultimoRegistro = await this.model.findOne({ ip: ip }).sort({ fecha: -1 }).exec();
+    //clonar el ultimoo registro de horometro
 
- //eliminar docuemntos de horometro con la misma ip
+    const ultimoRegistro = await this.model
+      .findOne({ ip: ip })
+      .sort({ fecha: -1 })
+      .exec();
+
+    //eliminar docuemntos de horometro con la misma ip
     await this.model.deleteMany({ ip: ip });
 
     // Crear un nuevo documento con los mismos datos pero con tiempo 0

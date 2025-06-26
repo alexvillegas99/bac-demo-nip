@@ -9,6 +9,4 @@ export class UploadBase64ImageDto {
   @ApiProperty()
   @IsString()
   route: string;
-
-
 }

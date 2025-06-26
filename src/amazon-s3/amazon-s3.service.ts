@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { UploadBase64ImageDto } from './dto/upload-base64-image.dto';
 import axios from 'axios';
 @Injectable()
@@ -36,23 +36,25 @@ export class AmazonS3Service {
         Body: Buffer.from(imageData, 'base64'),
         ContentType: 'image/jpeg',
       };
- 
+
       const uploadCommand = new PutObjectCommand(params);
       const result = await this.s3.send(uploadCommand);
 
-      let imageUrl = `https://${this.bucketName}.s3.${this.regionName}.amazonaws.com/${params.Key}`.replace(/\s+/g, '');
- 
+      let imageUrl =
+        `https://${this.bucketName}.s3.${this.regionName}.amazonaws.com/${params.Key}`.replace(
+          /\s+/g,
+          '',
+        );
 
       return { imageUrl };
     } catch (error) {
       this.logger.error('Error al cargar la imagen:', error);
-      
     }
   }
 
   async deleteImageByUrl(imageUrl: string) {
     try {
-     /*  const data = imageUrl.split('/');
+      /*  const data = imageUrl.split('/');
       const imageName = data[data.length - 1];
 
       const params = {
@@ -74,7 +76,8 @@ export class AmazonS3Service {
   async getImageBase64(imageUrl: string): Promise<string> {
     try {
       // Descargar la imagen como un buffer de datos
-      const response = await axios.get(imageUrl, {
+      const image = `https://nipautomation.s3.us-east-2.amazonaws.com/${imageUrl}`;
+      const response = await axios.get(image, {
         responseType: 'arraybuffer', // Permite obtener los datos binarios
       });
 
@@ -82,7 +85,9 @@ export class AmazonS3Service {
       const contentType = response.headers['content-type'];
 
       // Convertir la imagen a base64
-      const base64String = Buffer.from(response.data, 'binary').toString('base64');
+      const base64String = Buffer.from(response.data, 'binary').toString(
+        'base64',
+      );
 
       // Formatear el string en base64 con el prefijo de tipo MIME
       return `data:${contentType};base64,${base64String}`;
