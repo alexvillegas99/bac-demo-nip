@@ -113,6 +113,8 @@ export class HistoricoPlcService {
               VOLTAJE_BC: { $avg: '$VOLTAJE_BC' },
               VOLTAJE_CA: { $avg: '$VOLTAJE_CA' },
 
+              ENERG: { $avg: '$ENERG' },
+
               TH_DBA: { $avg: '$TH_DBA' },
               TH_DBC: { $avg: '$TH_DBC' },
               TH_DCA: { $avg: '$TH_DCA' },
@@ -232,7 +234,7 @@ async obtenerPromedioEnergiaPorIps(
 
   for (const ip of ips) {
     const dias = await this.plcDataBase
-      .aggregate([
+      .aggregate([ 
         {
           $match: {
             IP: ip,
