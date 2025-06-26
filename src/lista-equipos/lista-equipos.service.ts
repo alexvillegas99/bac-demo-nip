@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { listaEquipos, Rango } from './entities/lista-equipos.entity';
+import { listaEquipos, Rango, Registro } from './entities/lista-equipos.entity';
 import { ErrorHandlerService } from 'src/common/services/error-handler.service';
 import { ErrorManager } from 'src/common/error.manager';
 
@@ -51,7 +51,7 @@ export class ListaEquiposService {
   async updateRangoByDescription(
     equipoId: string,
     description: string,
-    data: Partial<Rango>,
+    data: Partial<Registro | any>,
   ) {
     try {
       // Paso 1: Buscar el documento
@@ -73,23 +73,35 @@ export class ListaEquiposService {
 
       // Paso 3: Construir los campos a actualizar
       const pathPrefix = `data.${dataIndex}.rango`;
+      const pathPrefixData = `data.${dataIndex}`;
       const updateFields: Record<string, any> = {};
 
-      if (data.RangoMinimoAlerta !== undefined)
+      if (data.Description !== undefined)
+        updateFields[`${pathPrefixData}.Description`] = data.newDescription;
+
+      if (data.Register !== undefined)
+        updateFields[`${pathPrefixData}.Register`] = data.Register;
+
+      if (data.DataType !== undefined)
+        updateFields[`${pathPrefixData}.DataType`] = data.DataType;
+
+      if (data.rango?.RangoMinimoAlerta !== undefined)
         updateFields[`${pathPrefix}.RangoMinimoAlerta`] =
-          data.RangoMinimoAlerta;
+          data.rango?.RangoMinimoAlerta;
 
-      if (data.RangoMinimoModerado !== undefined)
+      if (data.rango?.RangoMinimoModerado !== undefined)
         updateFields[`${pathPrefix}.RangoMinimoModerado`] =
-          data.RangoMinimoModerado;
+          data.rango?.RangoMinimoModerado;
 
-      if (data.RangoMaximoAlerta !== undefined)
+      if (data.rango?.RangoMaximoAlerta !== undefined)
         updateFields[`${pathPrefix}.RangoMaximoAlerta`] =
-          data.RangoMaximoAlerta;
+          data.rango?.RangoMaximoAlerta;
 
-      if (data.RangoMaximoModerado !== undefined)
+      if (data.rango?.RangoMaximoModerado !== undefined)
         updateFields[`${pathPrefix}.RangoMaximoModerado`] =
-          data.RangoMaximoModerado;
+          data.rango?.RangoMaximoModerado;
+
+      console.log(updateFields, 'data...');
 
       // Paso 4: Ejecutar la actualización
       const result = await this.listaEquipos.updateOne(

@@ -27,7 +27,7 @@ export class ListaEquiposController {
     return this.listaEquiposService.updateRangoByDescription(
       id,
       body.data[0].Description,
-      body.data[0].rango,
+      body.data[0],
     );
   }
 }
