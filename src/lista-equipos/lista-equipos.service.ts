@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { listaEquipos } from './entities/lista-equipos.entity';
+import { listaEquipos, Rango } from './entities/lista-equipos.entity';
 import { ErrorHandlerService } from 'src/common/services/error-handler.service';
 import { ErrorManager } from 'src/common/error.manager';
 
@@ -45,6 +45,67 @@ export class ListaEquiposService {
       return actualizacion;
     } catch (err) {
       throw ErrorManager.createSignatureError(err.message);
+    }
+  }
+
+  async updateRangoByDescription(
+    equipoId: string,
+    description: string,
+    data: Partial<Rango>,
+  ) {
+    try {
+      // Paso 1: Buscar el documento
+      const equipo = await this.listaEquipos.findById(equipoId).exec();
+      if (!equipo) {
+        throw new Error(`No se encontró el equipo con ID ${equipoId}`);
+      }
+
+      // Paso 2: Buscar índice dentro del array `data[]`
+      const dataIndex = equipo.data.findIndex(
+        (item) => item.Description === description,
+      );
+
+      if (dataIndex === -1) {
+        throw new Error(
+          `No se encontró un registro con Description "${description}"`,
+        );
+      }
+
+      // Paso 3: Construir los campos a actualizar
+      const pathPrefix = `data.${dataIndex}.rango`;
+      const updateFields: Record<string, any> = {};
+
+      if (data.RangoMinimoAlerta !== undefined)
+        updateFields[`${pathPrefix}.RangoMinimoAlerta`] =
+          data.RangoMinimoAlerta;
+
+      if (data.RangoMinimoModerado !== undefined)
+        updateFields[`${pathPrefix}.RangoMinimoModerado`] =
+          data.RangoMinimoModerado;
+
+      if (data.RangoMaximoAlerta !== undefined)
+        updateFields[`${pathPrefix}.RangoMaximoAlerta`] =
+          data.RangoMaximoAlerta;
+
+      if (data.RangoMaximoModerado !== undefined)
+        updateFields[`${pathPrefix}.RangoMaximoModerado`] =
+          data.RangoMaximoModerado;
+
+      // Paso 4: Ejecutar la actualización
+      const result = await this.listaEquipos.updateOne(
+        { _id: equipoId },
+        { $set: updateFields },
+      );
+
+      if (result.modifiedCount === 0) {
+        throw new Error(
+          `No se modificó el registro con Description "${description}"`,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      throw new Error(`Error actualizando rango: ${error.message}`);
     }
   }
 }

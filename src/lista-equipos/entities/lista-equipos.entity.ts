@@ -1,20 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema()
-export class Registro {
-  @Prop()
-  Description: string;
-
-  @Prop()
-  Register: string;
-
-  @Prop()
-  DataType: string;
-}
-
-const RegistroSchema = SchemaFactory.createForClass(Registro);
-
 @Schema({ _id: false })
 export class Rango {
   @Prop({ default: 0 })
@@ -29,9 +15,23 @@ export class Rango {
   @Prop({ default: 0 })
   RangoMaximoAlerta: number;
 }
-
 const RangoSchema = SchemaFactory.createForClass(Rango);
-// RegistroSchema.set('_id', false); // Evita que se genere un nuevo _id por cada elemento del array
+
+@Schema({ _id: false })
+export class Registro {
+  @Prop()
+  Description: string;
+
+  @Prop()
+  Register: string;
+
+  @Prop()
+  DataType: string;
+
+  @Prop({ type: RangoSchema })
+  rango: Rango;
+}
+const RegistroSchema = SchemaFactory.createForClass(Registro);
 
 @Schema({ collection: 'lista-equipos', strict: false })
 export class listaEquipos {
@@ -76,11 +76,7 @@ export class listaEquipos {
 
   @Prop({ type: [RegistroSchema] })
   data: Registro[];
-
-  @Prop({ type: RangoSchema })
-  rango: Rango;
 }
-
 export type listaEquiposDocument = listaEquipos & Document;
 export const listaEquiposSchema = SchemaFactory.createForClass(listaEquipos);
 export const listaEquiposModelName = 'listaEquipos';

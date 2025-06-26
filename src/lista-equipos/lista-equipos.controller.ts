@@ -21,4 +21,13 @@ export class ListaEquiposController {
   async actualizarEquipo(@Param('id') id: string, @Body() data: any) {
     return this.listaEquiposService.updateById(id, data);
   }
+
+  @Put('rango/:id')
+  async actualizarRango(@Param('id') id: string, @Body() body: any) {
+    return this.listaEquiposService.updateRangoByDescription(
+      id,
+      body.data[0].Description,
+      body.data[0].rango,
+    );
+  }
 }
