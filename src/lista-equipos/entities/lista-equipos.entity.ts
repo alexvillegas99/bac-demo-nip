@@ -38,6 +38,9 @@ export class listaEquipos {
   @Prop({ required: true })
   ip: string;
 
+  @Prop()
+  ipEquipo: string;
+
   @Prop({ required: true })
   nombre: string;
 

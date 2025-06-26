@@ -101,8 +101,6 @@ export class ListaEquiposService {
         updateFields[`${pathPrefix}.RangoMaximoModerado`] =
           data.rango?.RangoMaximoModerado;
 
-      console.log(updateFields, 'data...');
-
       // Paso 4: Ejecutar la actualización
       const result = await this.listaEquipos.updateOne(
         { _id: equipoId },
