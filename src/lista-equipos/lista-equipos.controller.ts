@@ -18,7 +18,7 @@ export class ListaEquiposController {
   }
 
   @Put(':id')
-  async actualizarUsuario(@Param('id') id: string, @Body() data: any) {
+  async actualizarEquipo(@Param('id') id: string, @Body() data: any) {
     return this.listaEquiposService.updateById(id, data);
   }
 }

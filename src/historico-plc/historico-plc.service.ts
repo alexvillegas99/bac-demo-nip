@@ -61,10 +61,10 @@ export class HistoricoPlcService {
   async find(body: any) {
     try {
       const { ip, tipo, desde, hasta } = body;
-      console.log('IP:', ip);
-      console.log('Tipo:', tipo);
-      console.log('Desde:', desde);
-      console.log('Hasta:', hasta);
+      //console.log('IP:', ip);
+      //console.log('Tipo:', tipo);
+      //console.log('Desde:', desde);
+      //console.log('Hasta:', hasta);
 
       const matchStage: any = {
         fecha: {

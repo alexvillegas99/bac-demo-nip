@@ -71,8 +71,6 @@ export class TareaService {
         throw new Error('No se encontró o no se modificó la actividad');
       }
 
-      console.log(result, 'result');
-
       return result;
     } catch (error) {
       throw new Error(`Error actualizando actividad: ${error.message}`);

@@ -18,8 +18,8 @@ export class MailService {
     };
 
     try {
-      console.log('📧 Enviando correo...');
-      console.log(mailOptions)
+      //console.log('📧 Enviando correo...');
+      //console.log(mailOptions)
       const result = await this.mailerService.sendMail(mailOptions);
       console.log('✉️ Correo enviado:', result);
       return true;

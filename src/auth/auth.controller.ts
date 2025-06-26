@@ -45,7 +45,6 @@ export class AuthController {
   async refreshToken(@Res() res: Response, @GetUser() user: any) {
     const result = await this.authService.renewToken(user._id);
     delete user.clkave;
-    console.log('user', user);
     return res.status(200).json({ user, token: result });
   }
 }
