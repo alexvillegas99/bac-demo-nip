@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { listaEquipos, Rango, Registro } from './entities/lista-equipos.entity';
 import { ErrorHandlerService } from 'src/common/services/error-handler.service';
 import { ErrorManager } from 'src/common/error.manager';
+import { AmazonS3Service } from 'src/amazon-s3/amazon-s3.service';
 
 @Injectable()
 export class ListaEquiposService {
@@ -11,6 +12,7 @@ export class ListaEquiposService {
     @InjectModel('listaEquipos') // Inyecta el modelo de MongoDB
     private readonly listaEquipos: Model<listaEquipos>,
     private readonly _errorHandlerService: ErrorHandlerService,
+    private readonly _amazonS3Service: AmazonS3Service,
   ) {}
 
   async find() {
@@ -24,6 +26,25 @@ export class ListaEquiposService {
 
   async create(payload: any) {
     try {
+      if (payload.imagenBase64) {
+        const urlImagen = await this._amazonS3Service.uploadBase64({
+          image: payload.imagenBase64,
+          route: 'imagen-equipo',
+        });
+        payload.imagen = urlImagen.imageUrl;
+        delete payload.imagenBase64;
+      }
+      if (payload.motorBase64) {
+        const urlImagenMotor = await this._amazonS3Service.uploadBase64({
+          image: payload.motorBase64,
+          route: 'imagen-motor',
+        });
+        payload.motor = urlImagenMotor.imageUrl;
+        delete payload.motorBase64;
+      }
+      delete payload.imagenBase64;
+      delete payload.motorBase64;
+
       const respuesta = new this.listaEquipos(payload);
       return await respuesta.save();
     } catch (err) {
@@ -31,8 +52,39 @@ export class ListaEquiposService {
     }
   }
 
+  async createValor(_id: string, payload: any) {
+    try {
+      return this.listaEquipos.findOneAndUpdate(
+        { _id }, // o puedes usar _id u otro identificador
+        { $push: { data: payload } },
+        { new: true },
+      );
+    } catch (err) {
+      throw ErrorManager.createSignatureError(err.message);
+    }
+  }
+
   async updateById(id: string, payload: any) {
     try {
+      if (payload.imagenBase64) {
+        const urlImagen = await this._amazonS3Service.uploadBase64({
+          image: payload.imagenBase64,
+          route: 'imagen-equipo',
+        });
+        payload.imagen = urlImagen.imageUrl;
+        delete payload.imagenBase64;
+      }
+      if (payload.motorBase64) {
+        const urlImagenMotor = await this._amazonS3Service.uploadBase64({
+          image: payload.motorBase64,
+          route: 'imagen-motor',
+        });
+        payload.motor = urlImagenMotor.imageUrl;
+        delete payload.motorBase64;
+      }
+      delete payload.imagenBase64;
+      delete payload.motorBase64;
+
       const actualizacion = await this.listaEquipos
         .findByIdAndUpdate(id, payload, { new: true })
         .exec();

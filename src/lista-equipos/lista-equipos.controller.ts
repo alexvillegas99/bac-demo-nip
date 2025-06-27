@@ -17,6 +17,12 @@ export class ListaEquiposController {
     return await this.listaEquiposService.create(data);
   }
 
+  @Post('create-valor')
+  async createValor(@Body() body: any) {
+    console.log(body, 'body');
+    return await this.listaEquiposService.createValor(body._id, body.data[0]);
+  }
+
   @Put(':id')
   async actualizarEquipo(@Param('id') id: string, @Body() data: any) {
     return this.listaEquiposService.updateById(id, data);

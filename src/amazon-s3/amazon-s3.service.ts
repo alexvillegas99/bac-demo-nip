@@ -40,13 +40,13 @@ export class AmazonS3Service {
       const uploadCommand = new PutObjectCommand(params);
       const result = await this.s3.send(uploadCommand);
 
-      let imageUrl =
+      const imageUrl =
         `https://${this.bucketName}.s3.${this.regionName}.amazonaws.com/${params.Key}`.replace(
           /\s+/g,
           '',
         );
 
-      return { imageUrl };
+      return { imageUrl, result };
     } catch (error) {
       this.logger.error('Error al cargar la imagen:', error);
     }
