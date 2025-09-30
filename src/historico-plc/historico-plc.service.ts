@@ -486,7 +486,7 @@ async obtenerConsumoCostosPorFranjasAproximadas(
       const baseFecha = new Date(`${dia}T00:00:00-05:00`);
       const horaInicio = new Date(baseFecha);
       horaInicio.setHours(franja.inicio);
-      const horaFin = new Date(baseFecha);
+      const horaFin = new Date(baseFecha); 
       horaFin.setHours(franja.fin);
 
       // Buscar registros más cercanos a inicio y fin

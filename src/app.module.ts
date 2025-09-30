@@ -16,8 +16,9 @@ import { TareasModule } from './tareas/tareas.module';
 import { AmazonS3Module } from './amazon-s3/amazon-s3.module';
 import { MailModule } from './mail/mail.module';
 import { PerfilModule } from './perfil/perfil.module';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
 @Module({
-  imports: [
+  imports: [ 
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
@@ -40,6 +41,7 @@ import { PerfilModule } from './perfil/perfil.module';
     AmazonS3Module,
     MailModule,
     PerfilModule,
+    NotificacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
